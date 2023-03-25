@@ -1,5 +1,4 @@
 import { useEffect, useState, useContext, useCallback } from "react";
-
 import Box from "./components/menu";
 import ShowAccount from "./components/showAccount";
 import "./App.css";
@@ -7,9 +6,9 @@ import ShowActions from "./components/ShowActions";
 import CreateMenu from "./components/createmenu";
 import axios from "axios";
 import { UserContext } from "./components/userContext";
-import DepositingPage from "./components/DepositingPage";
 import { InnerBox } from "./styled/InnerBox";
 import Transferring from "./components/TransferringPage";
+
 function App() {
   const {
     newUserAdd,
@@ -24,16 +23,16 @@ function App() {
     setErrDeposition,
     setNewIdReceiver,
     newIdReceiver,
+    updateNow,
+    setUpdateNow,
   } = useContext(UserContext);
 
+  const [isCash, setIsCash] = useState(true);
+  const [isOk, setIsOk] = useState(false);
+  const [objToAdd, setObjToAdd] = useState("");
+  const actionsToDo = ["Depositing", "Update credit", "Transferring"];
   const [nameData, setNameData] = useState([]);
-  const [doAction, setDoAction] = useState(false);
-  const [anAction, setAnAction] = useState(false);
-  const [updateNow, setUpdateNow] = useState("");
 
-  const Actions = () => {
-    if (!doAction && !anAction) setDoAction(true);
-  };
   const Create = () => {
     if (!createUserNow) setCreateUserNow(true);
   };
@@ -71,119 +70,82 @@ function App() {
     setValidMessage("");
     setNewUserAdd("");
   }, [setCreateUserNow, setNewUserAdd, setValidMessage]);
-  const actionsToDo = ["Depositing", "Update credit", "Transferring"];
 
   const DoAction = (e) => {
-    if (e.target.innerText === "Depositing") {
-      setDoAction(false);
-      setAnAction(true);
-      setUpdateNow("depositing");
-    }
-    if (e.target.innerText === "Update credit") {
-      setDoAction(false);
-      setUpdateNow("update");
-    }
-    if (e.target.innerText === "Transferring") {
-      setDoAction(false);
-      setAnAction(false);
-      setUpdateNow("transferring");
-    }
+    setUpdateNow(`${e.target.innerText}`);
   };
 
   const DoTransferring = async (e) => {
     e.preventDefault();
 
-    if (!newCashAdded || !newId || !newIdReceiver) {
+    if (!newCashAdded || !newId) {
+      setErrDeposition("Please fill all");
+    } else if (updateNow === "Transferring" && !newIdReceiver) {
       setErrDeposition("Please fill all");
     } else {
-      try {
-        await axios.get(
-          `https://calm-tan-sawfish-boot.cyclic.app/api/v1/newUser/${newId}`
-        );
+      if (updateNow !== "Update credit") {
+        setIsCash(true);
+        if (newCashAdded < 1 || newCashAdded > 2000) {
+          setErrDeposition(
+            "Depositing must be with positive numbers till 2000"
+          );
+        } else {
+          setIsOk(true);
+        }
+      }
+      if (updateNow === "Update credit" || isOk) {
+        isCash
+          ? setObjToAdd({ cash: Number(`${newCashAdded}`) })
+          : setObjToAdd({ credit: Number(`${newCashAdded}`) });
+
         try {
           await axios.get(
-            `https://calm-tan-sawfish-boot.cyclic.app/api/v1/newUser/${newIdReceiver}`
+            `https://calm-tan-sawfish-boot.cyclic.app/api/v1/newUser/${newId}`
           );
-          try {
-            await axios.put(
-              `https://calm-tan-sawfish-boot.cyclic.app/api/v1/newUser/${newId}`,
-              { credit: Number(`${newCashAdded}`) }
-            );
-            setUpdateNow("");
-            setNewCashAdded("");
-            setNewId("");
-            setNewIdReceiver("");
-          } catch (err) {
-            console.log("Something wrong with fetch", err);
+          if (updateNow === "Transferring") {
+            try {
+              await axios.get(
+                `https://calm-tan-sawfish-boot.cyclic.app/api/v1/newUser/${newIdReceiver}`
+              );
+              try {
+                await axios.put(
+                  `https://calm-tan-sawfish-boot.cyclic.app/api/v1/newUser/${newId}/${newIdReceiver}`,
+                  { credit: Number(`${newCashAdded}`) }
+                );
+                setUpdateNow("");
+                setNewCashAdded("");
+                setNewId("");
+                setNewIdReceiver("");
+                setIsOk(false);
+              } catch (err) {
+                console.log("Something wrong with fetch", err);
+              }
+            } catch (err) {
+              console.log("the receiver is not found", err);
+              setErrDeposition("There is no user");
+            }
+          } else {
+            try {
+              await axios.put(
+                `https://calm-tan-sawfish-boot.cyclic.app/api/v1/newUser/${newId}`,
+                objToAdd
+              );
+
+              setUpdateNow("");
+              setNewCashAdded("");
+              setNewId("");
+            } catch (err) {
+              console.log("Something wrong with fetch", err);
+            }
           }
         } catch (err) {
-          console.log("the receiver is not found", err);
-          setErrDeposition("There is no user");
+          console.log("the giver is not found", err);
+          setErrDeposition("The user is not found");
         }
-      } catch (err) {
-        console.log("the giver is not found", err);
-        setErrDeposition("There is no user");
       }
     }
   };
-  const DoUpdate = async (e) => {
-    e.preventDefault();
 
-    if (!newCashAdded || !newId) {
-      setErrDeposition("Please fill all");
-    } else {
-      try {
-        await axios.get(
-          `https://calm-tan-sawfish-boot.cyclic.app/api/v1/newUser/${newId}`
-        );
-
-        try {
-          await axios.put(
-            `https://calm-tan-sawfish-boot.cyclic.app/api/v1/newUser/${newId}`,
-            { credit: Number(`${newCashAdded}`) }
-          );
-          setUpdateNow("");
-          setNewCashAdded("");
-          setNewId("");
-        } catch (err) {
-          console.log("Something wrong with fetch", err);
-        }
-      } catch (err) {
-        console.log("There is no user exist", err);
-        setErrDeposition("There is no user");
-      }
-    }
-  };
-  const DoDeposition = async (e) => {
-    e.preventDefault();
-    if (!newCashAdded || !newId) {
-      setErrDeposition("Please fill all");
-    } else if (newCashAdded < 1 || newCashAdded > 2000) {
-      setErrDeposition("Depositing must be with positive numbers till 2000");
-    }
-    //ToDo- add a check to verify if the id is valid
-    else {
-      try {
-        await axios.get(
-          `https://calm-tan-sawfish-boot.cyclic.app/api/v1/newUser/${newId}`
-        );
-        try {
-          await axios.put(
-            `https://calm-tan-sawfish-boot.cyclic.app/api/v1/newUser/${newId}`,
-            { cash: Number(`${newCashAdded}`) }
-          );
-          setAnAction(false);
-          setNewCashAdded("");
-          setNewId("");
-        } catch (err) {
-          console.log("Something wrong with fetch", err);
-        }
-      } catch (err) {
-        console.log("There is no user exist", err);
-        setErrDeposition("There is no user");
-      }
-    }
-  };
   const AddCash = (e) => {
     setNewCashAdded(e.target.value);
     setErrDeposition("");
@@ -209,7 +171,7 @@ function App() {
       }
     };
     fetchUsers();
-  }, [newUserAdd, createUserNow, BackTo, anAction, updateNow]);
+  }, [newUserAdd, createUserNow, BackTo, updateNow]);
   const contents = [
     [
       <InnerBox>
@@ -224,7 +186,7 @@ function App() {
           );
         })}
       </InnerBox>,
-      Actions,
+      () => {},
     ],
     [
       !createUserNow ? (
@@ -241,24 +203,16 @@ function App() {
     [
       updateNow === "" ? (
         "the act"
-      ) : updateNow === "update" ? (
-        <DepositingPage
-          DoDeposition={DoUpdate}
-          AddCash={AddCash}
-          AddId={AddId}
-        />
-      ) : updateNow === "depositing" ? (
-        <DepositingPage
-          DoDeposition={DoDeposition}
-          AddCash={AddCash}
-          AddId={AddId}
-        />
       ) : (
         <Transferring
+          key={Math.random()}
+          title={updateNow}
           DoTransferring={DoTransferring}
           AddCash={AddCash}
           AddId={AddId}
-          AddIdReceiver={AddIdReceiver}
+          AddIdReceiver={
+            updateNow === "Transferring" ? AddIdReceiver : () => {}
+          }
         />
       ),
       () => {},
@@ -268,15 +222,14 @@ function App() {
     <div className="App">
       <div className="BoxContainer">
         {contents.map((todo, i) => (
-          <Box n={i} key={Math.random()} actToDo={todo[1]} content={todo[0]} />
+          <Box color={i} key={i} actToDo={todo[1]} content={todo[0]} />
         ))}
       </div>
       <div className="accountsMenu">
-        {/* {nameData && nameData} */}
-        {nameData.map((names) => {
+        {nameData.map((names, index) => {
           return (
             <ShowAccount
-              key={Math.random()}
+              key={index}
               nameAccount={names.name}
               cashAccount={names.cash}
               creditAccount={names.credit}

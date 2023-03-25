@@ -4,7 +4,7 @@ export const Box = styled.div`
     height: 20rem;
     border-radius: 1rem;
     margin:1rem;
-  background ${(props) => (props.n === 0 ? "blue" : "red")};
+  background ${(props) => (props.color === 0 ? "blue" : "red")};
   display:flex;
   align-items:center;
   justify-content:center;

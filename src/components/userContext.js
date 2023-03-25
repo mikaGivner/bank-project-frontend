@@ -10,7 +10,10 @@ export function UserProvider(props) {
   const [newIdReceiver, setNewIdReceiver] = useState("");
   const [createUserNow, setCreateUserNow] = useState(false);
   const [errDeposition, setErrDeposition] = useState("");
+  const [updateNow, setUpdateNow] = useState("");
   const contextValue = {
+    updateNow,
+    setUpdateNow,
     newIdReceiver,
     setNewIdReceiver,
     errDeposition,

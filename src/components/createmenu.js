@@ -4,11 +4,11 @@ import { CreateForm } from "../styled";
 import { UserContext } from "./userContext";
 
 export default function CreateMenu({ onSubmit, onChange, BackTo }) {
-  const inputRef = useRef(null);
+  const valueRef = useRef(null);
   const { newUserAdd, validMessage, setCreateUserNow } =
     useContext(UserContext);
   useEffect(() => {
-    inputRef.current.focus();
+    valueRef.current.focus();
   }, [setCreateUserNow]);
 
   return (
@@ -18,7 +18,7 @@ export default function CreateMenu({ onSubmit, onChange, BackTo }) {
         type="text"
         onChange={onChange}
         value={newUserAdd}
-        ref={inputRef}
+        ref={valueRef}
       />
       <button type="submit">Create</button>
       {validMessage && validMessage}

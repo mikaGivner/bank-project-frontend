@@ -8,6 +8,7 @@ export default function Transferring({
   AddCash,
   AddId,
   AddIdReceiver,
+  title,
 }) {
   const {
     newCashAdded,
@@ -16,36 +17,43 @@ export default function Transferring({
     setNewId,
     errDeposition,
     newIdReceiver,
+    updateNow,
   } = useContext(UserContext);
+
   const inputIdRef = useRef(null);
   const inputCashRef = useRef(null);
-  const inputReceiverRef = useRef(null);
+  const ref3 = useRef(null);
+
   useEffect(() => {
     inputIdRef.current.focus();
     inputCashRef.current.focus();
-    inputReceiverRef.current.focus();
-  }, [setNewId, setNewCashAdded]);
+    updateNow === "Transferring" && ref3.current.focus();
+  }, [setNewId, setNewCashAdded, updateNow]);
+
+  const dataArr = [
+    ["How many add to your", "number", AddCash, newCashAdded, inputCashRef],
+    ["Who is the giver? (ID)", "text", AddId, newId, inputIdRef],
+  ];
   return (
     <DepositingStyle onSubmit={DoTransferring}>
-      <label>How many add to your</label>
-      <input
-        type="number"
-        onChange={AddCash}
-        value={newCashAdded}
-        ref={inputCashRef}
-      />
-
-      <label>Who is the giver? (ID)</label>
-      <input type="text" onChange={AddId} value={newId} ref={inputIdRef} />
-
-      <label>Who is the receiver? (ID)</label>
-      <input
-        type="text"
-        onChange={AddIdReceiver}
-        value={newIdReceiver}
-        ref={inputReceiverRef}
-      />
-
+      {title}
+      {dataArr.map((obj, i) => (
+        <>
+          <label>{obj[0]}</label>
+          <input type={obj[1]} onChange={obj[2]} value={obj[3]} ref={obj[4]} />
+        </>
+      ))}
+      {updateNow === "Transferring" && (
+        <>
+          <label>Who is the receiver? (ID)</label>
+          <input
+            type="text"
+            onChange={AddIdReceiver}
+            value={newIdReceiver}
+            ref={ref3}
+          />
+        </>
+      )}
       <button type="submit">Add Cash</button>
       {errDeposition && errDeposition}
     </DepositingStyle>

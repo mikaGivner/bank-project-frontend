@@ -7,12 +7,22 @@ export default function ShowAccount({
   creditAccount,
   idAccount,
 }) {
+  const arr = [
+    ["Name:", nameAccount],
+    ["Cash:", cashAccount],
+    ["Credit:", creditAccount],
+    ["id:", idAccount],
+  ];
   return (
     <Account>
-      <Val>Name:{nameAccount} </Val>
-      <Val>Cash:{cashAccount}</Val>
-      <Val>Credit:{creditAccount}</Val>
-      <Val>id:{idAccount}</Val>
+      {arr.map((thisAccount) => {
+        return (
+          <Val key={Math.random()}>
+            {thisAccount[0]}
+            {thisAccount[1]}
+          </Val>
+        );
+      })}
     </Account>
   );
 }
